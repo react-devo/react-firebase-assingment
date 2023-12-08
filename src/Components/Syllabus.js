@@ -23,7 +23,20 @@ const SyllabusForm = () => {
   const [subject, setSubject] = useState('');
   const [year, setYear] = useState('');
   const [description, setDescription] = useState('');
+  const [formMsg, setFormMsg] = useState('');
+  const [loading, setLoading] = useState(false);
   const [topics, setTopics] = useState([{ topic: '', subtopics: [''] }]);
+
+
+  //clear form fields
+  const clearForm =()=>{
+    setTopics([{ topic: '', subtopics: [''] }]);
+    setDescription('')
+    setYear('')
+    setSubject('')
+    setClassLevel('')
+    setBoard('');
+  }
 
   const handleTopicChange = (index, value) => {
     const updatedTopics = [...topics];
@@ -49,32 +62,42 @@ const SyllabusForm = () => {
 
   const handleSaveSyllabus = async () => {
     // Save syllabus data to Firestore
+    const id = Math.floor(Math.random() * 10000);
     const syllabusData = {
+      studentNumber: id,
       board,
-      classLevel,
-      subject,
+      class: classLevel,
+      medium: subject,
       year,
       description,
       topics,
     };
-    console.log(syllabusData, 'syllabusData')
-    return
+    setLoading(true);
+    setFormMsg('');
     try {
       // Assuming 'syllabus' is your Firestore collection name
       await db.collection('syllabus').add(syllabusData);
-      console.log('Syllabus saved successfully!');
+      setFormMsg('Syllabus saved successfully!');
+      setLoading(false);
+      clearForm();
       // You can add a success message or redirect the user to another page.
     } catch (error) {
-      console.error('Error saving syllabus:', error);
+      setFormMsg('Error saving syllabus:', error);
+      setLoading(false)
       // Handle error, show an error message, or log the error as needed.
     }
   };
 
+ 
   return (
     <Container maxWidth="md" style={{ marginTop: '2rem' }}>
       <Typography variant="h4" align="center" gutterBottom>
         Syllabus Form
       </Typography>
+
+     {formMsg&& <Typography variant="h6" align="center" gutterBottom>
+        {formMsg}
+      </Typography>}
       <form>
         {/* Dropdowns for board, class, subject, and year selection */}
         <CustomDropDown title={"Board"} value={board} setValue={setBoard} MenuData={BoardType} />
@@ -105,9 +128,7 @@ const SyllabusForm = () => {
               value={topic.topic}
               onChange={(e) => handleTopicChange(topicIndex, e.target.value)}
             />
-            <Button onClick={handleAddTopic} style={{ marginTop: '1rem' }}>
-              Remove Topic
-            </Button>
+
             {topic.subtopics.map((subtopic, subtopicIndex) => (
               <>
                 <TextField
@@ -119,9 +140,6 @@ const SyllabusForm = () => {
                   onChange={(e) => handleSubtopicChange(topicIndex, subtopicIndex, e.target.value)}
                   style={{ marginTop: '1rem' }}
                 />
-                <Button onClick={() => handleAddSubtopic(topicIndex)} style={{ marginTop: '1rem' }}>
-                  Remove Subtopic
-                </Button>
               </>
             ))}
             <Button onClick={() => handleAddSubtopic(topicIndex)} style={{ marginTop: '1rem' }}>
@@ -129,20 +147,22 @@ const SyllabusForm = () => {
             </Button>
           </div>
         ))}
-        <Button onClick={handleAddTopic} style={{ marginTop: '1rem' }}>
-          Add Topic
-        </Button>
+        <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: "space-between" }}>
+          <Button onClick={handleAddTopic} style={{ marginTop: '1rem' }}>
+            Add Topic
+          </Button>
 
-        {/* Save Button */}
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleSaveSyllabus}
-          disabled={!board || !classLevel || !subject || !year || !description || topics.some(t => t.topic === '' || t.subtopics.some(st => st === ''))}
-          style={{ marginTop: '1.5rem' }}
-        >
-          Save Syllabus
-        </Button>
+          {/* Save Button */}
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSaveSyllabus}
+            disabled={loading||!board || !classLevel || !subject || !year || !description || topics.some(t => t.topic === '' || t.subtopics.some(st => st === ''))}
+            style={{ marginTop: '1.5rem', display: 'flex', justifyContent: "center" }}
+          >
+            {loading ? "Saving..." : "Save Syllabus"}
+          </Button>
+        </div>
       </form>
     </Container>
   );

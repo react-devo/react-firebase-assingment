@@ -1,14 +1,62 @@
 import React, { useState } from 'react';
 import { Container, Typography, TextField, Button } from '@mui/material';
+import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
+import db from '../config/firebaseconfig';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
+    const navigate = useNavigate()
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
+    const [error, setError] = useState('')
+    const [loading, setLoading] = useState(false)
 
-
-    const handleSubmit = (event) => {
+// sumbit user name and password
+    const handleSubmit = async (event) => {
         event.preventDefault();
-        // Add your login logic here
+        setError('');
+        if (username?.trim()?.length > 0 && password?.trim()?.length > 5) {
+            setLoading(true);
+            try {
+               await checkUsernameExists();
+
+            } catch (error) {
+                console.error('Error logging in:', error.message);
+                setError(error.message);
+                setLoading(false);
+            }
+        }else{
+            setError('Password should be greater than 5 character.');
+        }
+    };
+    
+    // checking user is already exist or not
+    const checkUsernameExists = async () => {
+        try {
+            const q = query(collection(db, 'userDetails'), where('username', '==', username));
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                // Username exists, send user details
+                const data = querySnapshot.docs.map((doc) => ({
+                    id: doc.id,
+                    ...doc.data(),
+                }));
+                localStorage.setItem('userData', JSON.stringify({ username: data[0]?.username, token: data[0]?.id }));
+                setLoading(false);
+                navigate('/');
+            } else {
+              // Username not exists, send user details
+                const docRef = await addDoc(collection(db, 'userDetails'), { username, password });
+                if (docRef?.id) {
+                    localStorage.setItem('userData', JSON.stringify({ username, token: docRef?.id }))
+                    navigate('/');
+                }
+                setLoading(false);
+            }
+        } catch (error) {
+            console.error('Error checking username:', error);
+        }
     };
 
     return (
@@ -22,12 +70,12 @@ const Login = () => {
                 justifyContent: 'center',
                 minHeight: '100vh',
                 backgroundColor: '#2196f3', // Blue background color
-                color: '#fff'
             }}
         >
             <Typography component="h1" variant="h5" sx={{ color: '#fff' }}>
                 Login
             </Typography>
+            {error && <p style={{ color: "red" }}> {error}</p>}
             <form
                 onSubmit={handleSubmit}
                 style={{
@@ -37,37 +85,33 @@ const Login = () => {
                     marginTop: '2rem',
                 }}
             >
+
                 <TextField
-                    margin="normal"
-                    required
+                    label="Username*"
+                    variant="outlined"
                     fullWidth
-                    id="username"
-                    label="Username"
-                    name="username"
+                    require
                     value={username}
-                    onChange={(e)=>setUsername(e.target.name)}
-                    autoComplete="username"
-                    autoFocus
+                    onChange={(e) => setUsername(e.target.value)}
                 />
+
                 <TextField
                     margin="normal"
-                    required
-                    fullWidth
+                    require
                     name="password"
-                    label="Password"
+                    label="Password*"
                     type="password"
                     value={password}
-                    onChange={(e)=>setPassword(e.target.name)}
-                    id="password"
-                    autoComplete="current-password"
+                    onChange={(e) => setPassword(e.target.value)}
                 />
                 <Button
                     type="submit"
                     fullWidth
+                    disabled={loading}
                     variant="contained"
                     sx={{ marginTop: '1rem', backgroundColor: '#1976d2', color: '#fff' }}
                 >
-                    Login
+                    {loading ? "Loading.." : "Login"}
                 </Button>
             </form>
         </Container>

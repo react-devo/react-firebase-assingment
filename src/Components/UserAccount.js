@@ -7,36 +7,40 @@ import {
   Container,
   Typography,
 } from '@mui/material';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 
 const UserAccountView = () => {
-  // Mock data for user profile
-  const userProfile = {
-    username: 'john_doe',
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    profilePic: 'https://via.placeholder.com/150', // Replace with actual URL
-  };
+  const navigate = useNavigate();
+  const {userDetail} = useSelector((state)=> state.user);
+
+ 
+  const logout =()=>{
+    localStorage.removeItem('userData');
+    navigate('/login')
+  }
+
 
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
       <Card>
         <CardContent>
           <Avatar
-            src={userProfile.profilePic}
+            src={userDetail.profilePic ?userDetail.profilePic :'https://via.placeholder.com/150'}
             alt="Profile"
             sx={{ width: 100, height: 100, mx: 'auto', my: 2 }}
           />
           <Typography variant="h5" component="div" align="center" gutterBottom>
-            {userProfile.name}
+            {userDetail.name}
           </Typography>
           <Typography variant="subtitle1" align="center" color="textSecondary" paragraph>
-            {userProfile.username}
+            {userDetail.username}
           </Typography>
           <Typography variant="body1" align="center" paragraph>
-            Email: {userProfile.email}
+            Email: {userDetail.email}
           </Typography>
-          <Button variant="contained" color="primary" fullWidth>
-            Edit Profile
+          <Button variant="contained" color="primary" fullWidth onClick={logout}>
+            Logout
           </Button>
         </CardContent>
       </Card>

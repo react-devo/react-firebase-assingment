@@ -1,0 +1,20 @@
+{
+  "students": [
+    {
+      "id": 1,
+      "studentNumber": 1111,
+      "name": "Bahar Constantia Masri",
+      "board": "1984-01-04",
+      "class": "Computer Science",
+      "medium": "english"
+    },
+    {
+      "id": 2,
+      "studentNumber": 2222,
+      "name": "Harold Nona s",
+      "board": "1961-05-10",
+      "class": "Communications",
+      "medium": "english"
+    }
+  ]
+}
